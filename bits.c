@@ -187,12 +187,33 @@ int logicalShift(int x, int n) {
  *   Rating: 4
  */
 int bitCount(int x) {
-	int bits_total; // store the total here
-	bits_total = (x & 0x55555555) + ((x >> 1) & 0x55555555); 	   //01010101010101010101010101010101
-	bits_total = (bits_total & 0x33333333) + ((bits_total >> 2) & 0x33333333); //00110011001100110011001100110011
-	bits_total = (bits_total & 0x0F0F0F0F) + ((bits_total >> 4) & 0x0F0F0F0F); //00001111000011110000111100001111
-	bits_total = (bits_total & 0x00FF00FF) + ((bits_total >> 8) & 0x00FF00FF); //00000000111111110000000011111111
-	bits_total = (bits_total & 0x0000FFFF) + ((bits_total >> 16)& 0x0000FFFF); //00000000000000001111111111111111
+
+    int bits_total,fmask1,fmask2,fmask3; // store the total here
+  int fives_mask = 0x55;
+  int threes_mask = 0x33;
+
+  fives_mask = (fives_mask << 8) | fives_mask;
+  fives_mask = (fives_mask << 16) | fives_mask; //0x55555555
+
+  threes_mask = (threes_mask << 8) | threes_mask;
+  threes_mask = (threes_mask << 16) | threes_mask; //0x33333333
+
+  fmask1 = 0x0F;
+  fmask1 = (fmask1 << 8) | fmask1;
+  fmask1 = (fmask1 << 16) | fmask1; //0x0F0F0F0F
+
+  fmask2 = 0xFF;
+  fmask2 = (fmask2 << 16) | fmask2; //0x00FF00FF
+
+  fmask3 = 0xFF;
+  fmask3 = (0xFF << 8) | fmask3; //0x0000FFFF
+
+	//int bits_total; // store the total here
+	bits_total = (x & fives_mask) + ((x >> 1) & fives_mask); 	   //01010101010101010101010101010101
+	bits_total = (bits_total & threes_mask) + ((bits_total >> 2) & threes_mask); //00110011001100110011001100110011
+	bits_total = (bits_total & fmask1) + ((bits_total >> 4) & fmask1); //00001111000011110000111100001111
+	bits_total = (bits_total & fmask2) + ((bits_total >> 8) & fmask2); //00000000111111110000000011111111
+	bits_total = (bits_total & fmask3) + ((bits_total >> 16)& fmask3); //00000000000000001111111111111111
 
 
   return bits_total;
