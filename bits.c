@@ -139,10 +139,9 @@ NOTES:
  *   Max ops: 8
  *   Rating: 1
  */
-
- //This function can be done by using DeMorgan's laws
 int bitAnd(int x, int y) {
-  unsigned result = ~((~x) | (~y));
+   //This function can be done by using DeMorgan's laws
+  int result = ~((~x) | (~y));
   return result;
 }
 /* 
@@ -153,13 +152,11 @@ int bitAnd(int x, int y) {
  *   Max ops: 6
  *   Rating: 2
  */
- #define HIGH_LSB 0xFF
- //Shift the byte to the least significant byte position
- //and it with a high LSB
 int getByte(int x, int n) {
-  int result = (x >> (n << 3)) & HIGH_LSB;
+  //Shift the byte to the least significant byte position
+ //and it with a high LSB
+  int result = (x >> (n << 3)) & 0xFF;
   return result;
-
 }
 /* 
  * logicalShift - shift x to the right by n, using a logical shift
@@ -174,10 +171,8 @@ int logicalShift(int x, int n) {
   //shift right and sign extend it so that you can invert it later
   //then shift it back one in the case of a 0 shift
   int result = ((1 << 31) >> n) << 1;
-  //and the notted version so that the 0's cancel out the sign extended shifts
+  //and with the inverted version so that the 0's cancel out the sign extended shifts
   return (x >> n) & ~result;
-  
-  //return result;
 }
 /*
  * bitCount - returns count of number of 1's in word
@@ -187,35 +182,34 @@ int logicalShift(int x, int n) {
  *   Rating: 4
  */
 int bitCount(int x) {
+  int bits_total, fives_mask, threes_mask, fmask1, fmask2, fmask3; 
 
-    int bits_total,fmask1,fmask2,fmask3; // store the total here
-  int fives_mask = 0x55;
-  int threes_mask = 0x33;
-
+  //create the masks
+  fives_mask = 0x55;
   fives_mask = (fives_mask << 8) | fives_mask;
-  fives_mask = (fives_mask << 16) | fives_mask; //0x55555555
+  fives_mask = (fives_mask << 16) | fives_mask; //55555555
 
+  threes_mask = 0x33;
   threes_mask = (threes_mask << 8) | threes_mask;
-  threes_mask = (threes_mask << 16) | threes_mask; //0x33333333
+  threes_mask = (threes_mask << 16) | threes_mask; //33333333
 
   fmask1 = 0x0F;
   fmask1 = (fmask1 << 8) | fmask1;
-  fmask1 = (fmask1 << 16) | fmask1; //0x0F0F0F0F
+  fmask1 = (fmask1 << 16) | fmask1; //0F0F0F0F
 
   fmask2 = 0xFF;
-  fmask2 = (fmask2 << 16) | fmask2; //0x00FF00FF
+  fmask2 = (0xFF << 16) | fmask2; //00FF00FF
 
   fmask3 = 0xFF;
-  fmask3 = (0xFF << 8) | fmask3; //0x0000FFFF
+  fmask3 = (0xFF << 8) | fmask3; //0000FFFF
 
-	//int bits_total; // store the total here
-	bits_total = (x & fives_mask) + ((x >> 1) & fives_mask); 	   //01010101010101010101010101010101
-	bits_total = (bits_total & threes_mask) + ((bits_total >> 2) & threes_mask); //00110011001100110011001100110011
-	bits_total = (bits_total & fmask1) + ((bits_total >> 4) & fmask1); //00001111000011110000111100001111
-	bits_total = (bits_total & fmask2) + ((bits_total >> 8) & fmask2); //00000000111111110000000011111111
-	bits_total = (bits_total & fmask3) + ((bits_total >> 16)& fmask3); //00000000000000001111111111111111
-
-
+  //compare x against each mask by anding it with each mask
+  //you get a count for each one and you add them all together
+  bits_total = (x & fives_mask) + ((x >> 1) & fives_mask);     //01010101010101010101010101010101
+  bits_total = (bits_total & threes_mask) + ((bits_total >> 2) & threes_mask); //00110011001100110011001100110011
+  bits_total = (bits_total & fmask1) + ((bits_total >> 4) & fmask1); //00001111000011110000111100001111
+  bits_total = (bits_total & fmask2) + ((bits_total >> 8) & fmask2); //00000000111111110000000011111111
+  bits_total = (bits_total & fmask3) + ((bits_total >> 16)& fmask3); //00000000000000001111111111111111
   return bits_total;
 }
 /* 
@@ -226,10 +220,18 @@ int bitCount(int x) {
  *   Rating: 4 
  */
 int bang(int x) {
-  int result = x | (x >> 16) | (x >> 8) | 
-              (x >> 4) || (x >> 2) | (x >> 1);
+  x = x | (x >> 16);
+  x = x | (x >> 8);
+  x = x | (x >> 4);
+  x = x | (x >> 2);
+  x = x | (x >> 1);
+  //Find if bits are set
 
-  return ~result & 1;
+  //check to see if everything cascaded down to the LSB
+  x = x & 0x1;
+
+  //invert the LSB by xor
+  return x ^ 1;
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -238,6 +240,8 @@ int bang(int x) {
  *   Rating: 1
  */
 int tmin(void) {
+  //we know that this is 32 bits, so shift a 1 to the MSB where it will be
+  //the most negative.
   int result = 1 << 31;
   return result;
 }
@@ -251,13 +255,13 @@ int tmin(void) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-	int bits, temp;
-	bits = 33 + ~n; //find number of bits to shift, the 33 is because we know one of the bits is a 2's complement
-	temp = x << bits; //get rid of 2's complement
-	temp = temp >> bits; //get value without 2's complement
-
+  int bits, temp;
+  bits = 33 + ~n; //find number of bits to shift, the 33 is because we know one of the bits is a 2's complement
+  temp = x << bits; //get rid of 2's complement
+  temp = temp >> bits; //get value without 2's complement
   return !(temp ^ x); //Bits should line up, if they don't return 0
 }
+
 /* 
  * divpwr2 - Compute x/(2^n), for 0 <= n <= 30
  *  Round toward zero
@@ -284,6 +288,7 @@ int divpwr2(int x, int n) {
  *   Rating: 2
  */
 int negate(int x) {
+  //invert two's complement number and add 1 
   int result = ~x + 1;
   return result;
 }
@@ -300,6 +305,7 @@ int isPositive(int x) {
   //and the most significant bit with double inverted value of x (to check if it was zero)
   return (~result & !!x);
 }
+
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
  *   Example: isLessOrEqual(4,5) = 1.
@@ -335,40 +341,46 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4
  */
 int ilog2(int x) {
-  int i, j, k, l, m;
-      x = x | (x >> 1);
-      x = x | (x >> 2);
-      x = x | (x >> 4);
-      x = x | (x >> 8);
-      x = x | (x >> 16);
+    //make your masks
+    int fives_mask, threes_mask, fmask1, fmask2, fmask3; // store the total here
 
-      // i = 0x55555555 
-      i = 0x55 | (0x55 << 8); 
-      i = i | (i << 16);
+    fives_mask = 0x55;
+    fives_mask = (fives_mask << 8) | fives_mask;
+    fives_mask = (fives_mask << 16) | fives_mask; //55555555
 
-      // j = 0x33333333 
-      j = 0x33 | (0x33 << 8);
-      j = j | (j << 16);
+    threes_mask = 0x33;
+    threes_mask = (threes_mask << 8) | threes_mask;
+    threes_mask = (threes_mask << 16) | threes_mask; //33333333
 
-      // k = 0x0f0f0f0f 
-      k = 0x0f | (0x0f << 8);
-      k = k | (k << 16);
+    fmask1 = 0x0F;
+    fmask1 = (fmask1 << 8) | fmask1;
+    fmask1 = (fmask1 << 16) | fmask1; //0F0F0F0F
 
-      // l = 0x00ff00ff 
-      l = 0xff | (0xff << 16);
+    fmask2 = 0xFF;
+    fmask2 = (0xFF << 16) | fmask2; //00FF00FF
 
-      // m = 0x0000ffff 
-      m = 0xff | (0xff << 8);
+    fmask3 = 0xFF;
+    fmask3 = (0xFF << 8) | fmask3; //0000FFFF
 
-      x = (x & i) + ((x >> 1) & i);
-      x = (x & j) + ((x >> 2) & j);
-      x = (x & k) + ((x >> 4) & k);
-      x = (x & l) + ((x >> 8) & l);
-      x = (x & m) + ((x >> 16) & m);
-      x = x + ~0;
-      return x; 
-  //return 2;
-}
+    //check to see if there are bytes in each position
+    x = x | (x >> 1);
+    x = x | (x >> 2);
+    x = x | (x >> 4);
+    x = x | (x >> 8);
+    x = x | (x >> 16);
+
+    //and the new combination with each mask, shift it and then and it again
+    //this is kind of like checking at each lower power and working your way up
+    //if it fits in the next highest power, then do the mask and shift it
+    //  and then change the value of x to reflect the next highest log.
+    x = (x & fives_mask) + ((x >> 1) & fives_mask);
+    x = (x & threes_mask) + ((x >> 2) & threes_mask);
+    x = (x & fmask1) + ((x >> 4) & fmask1);
+    x = (x & fmask2) + ((x >> 8) & fmask2);
+    x = (x & fmask3) + ((x >> 16) & fmask3);
+    x = x + ~0;
+    return x; 
+  }
 /* 
  * float_neg - Return bit-level equivalent of expression -f for
  *   floating point argument f.
@@ -399,17 +411,50 @@ unsigned float_neg(unsigned uf) {
     return uf ^ (0x1 << 31);
   }
 }
-/* 
- * float_i2f - Return bit-level equivalent of expression (float) x
- *   Result is returned as unsigned int, but
- *   it is to be interpreted as the bit-level representation of a
- *   single-precision floating point values.
- *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
- *   Max ops: 30
- *   Rating: 4
- */
-unsigned float_i2f(int x) {
-return 2;
+/*  
+ * float_i2f - Return bit-level equivalent of expression (float) x 
+ *   Result is returned as unsigned int, but 
+ *   it is to be interpreted as the bit-level representation of a 
+ *   single-precision floating point values. 
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while 
+ *   Max ops: 30 
+ *   Rating: 4 
+ */ 
+unsigned float_i2f(int x) { 
+    int i, exp, delta, bitMask; 
+    int bits = 0; 
+    unsigned bit; 
+     
+    bit = x & (1 << 31); /* obtain the sign bit*/ 
+    exp = (x >> 31) ? 158 : 0; /* INT_MIN */ 
+    if (x << 1) // x is not INT_MIN 
+    {  
+    if (x < 0) 
+    { 
+              x = -x; // work with positive numbers only  
+    } 
+          i = 30; // only up to 30 because last bit is sign bit 
+          while ( !((x >> i) & 1) ) // As long as there are 1's in x  
+    { 
+        i--; 
+    }  
+        exp = i + 127; // i is now the index where the first 0 is  
+        x = x << (31 - i); // remove everything above that 0 
+        bitMask = (1 << 23) - 1; // 23 is for the number of bits in float
+                 // Subtract 1 to obtain the 2's complement 3FFFFF 
+        bits = bitMask & (x >> 8); // Put the high 24 bits of x into the variable bits 
+        x = x & 0xFF; // overflow control 
+        delta = x > 128 || ((x == 128) && (bits & 1)); //value is larger than what is representable by float 
+        bits += delta; // if the value was larger than than what float can hold, add 1 
+        if(bits >> 23) // if bits has a 1 at the 24 position, there will be overflow 
+        { 
+           bits &= bitMask; // remove the overflow 
+           exp += 1; // acknowledge there was overflow 
+        } 
+    } 
+    bit = bit | (exp << 23); //add the overflowed bit to bit 
+    bit = bit | bits; // store the bits in bit 
+    return bit; 
 }
 /* 
  * float_twice - Return bit-level equivalent of expression 2*f for
@@ -423,6 +468,31 @@ return 2;
  *   Rating: 4
  */
 unsigned float_twice(unsigned uf) {
-  return 2;
+
+  int exp,bits;
+  unsigned bit;
+
+  exp = (uf >> 23) & 0xFF; // obtain upper bits of uf 
+  bits = uf & ((1 << 23) - 1); // obtain the bits from uf 
+  bit = uf & (1 << 31); // obtain the sign bit 
+
+  if ((exp ^ 0xFF)) // exp != 255 
+  { 
+    if (!exp) // exp is 0 
+    { 
+      bits = bits << 1;
+    }
+    else       // exp is not 0 
+    {
+      exp++;
+      if (exp == 255) // infinity 
+      {
+        bits = 0; 
+      }
+    }
+  }
+  bit = bit | (exp << 23);
+  bit = bit | bits;
+  return bit;
 }
 // Should be 15 puzzles, 2 level 1 puzzles, 5 level 2 puzzles, 3 level 3 puzzles, 5 level 4 puzzles
