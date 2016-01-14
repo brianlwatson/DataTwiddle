@@ -171,21 +171,14 @@ int getByte(int x, int n) {
  *   Rating: 3 
  */
 int logicalShift(int x, int n) {
+  //shift a 1 into the most significant bit
+  //shift right and sign extend it so that you can invert it later
+  //then shift it back one in the case of a 0 shift
+  int result = ((1 << 31) >> n) << 1;
+  //and the notted version so that the 0's cancel out the sign extended shifts
+  return (x >> n) & ~result;
   
-  int result;
-  int test2;
-  int test = (1 << 31) >> n;
-
-
-
-   result = (x >> n) & (0x80000000 /*& ((!!n) << 31))*/ >> n);
-   printf("\nPart1: %x\n", x >> n);
-   printf("Part2: %x\n", 0x80000000 >> n);
-   printf("TEST: %x\n", !!n << 31);
-   printf("Result: %x\n", ((x>>n) & (((!!n) << 31)>>n)));
-   printf("Input: %x Shift: %x Test: %x Result: %x\n", x, n, test,result);
-   
-  return result;
+  //return result;
 }
 /*
  * bitCount - returns count of number of 1's in word
@@ -241,7 +234,14 @@ int fitsBits(int x, int n) {
  *   Rating: 2
  */
 int divpwr2(int x, int n) {
-    return 2;
+  //Determine a mask for the sign
+  int mask = (1 << n) + ~0;
+  //printf("MASK %x %x %d \n",mask,x,n);
+  //Add 1 for a negative
+  //Add 0 for a non-negative
+  //mask n bits of shifts
+  int result = (x >> 31) & mask;
+    return (x + result) >> n;
 }
 /* 
  * negate - return -x 
@@ -275,20 +275,24 @@ int isPositive(int x) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
+  //swap the bits
+  int result;
+  //xor x and y to swap bits
   int sign = x ^ y;
-  int out = ~sign;
 
   //take the difference by negating one
   int difference = y + (~x + 1);
   
-  out = out & ~difference;
-  out = out | (sign & x);
-  out = out & (1 << 31);
+  //flip the swapped bits and and it with the notted difference
+  //Note that this will be all ones if they are the same. 
+  //keep the sign
+  result = ((~sign & ~difference) | (sign & x)) & (1 << 31);
 
+  //if result is 1, then it is less
   //!difference will tell us if they were equal or not
-  out = (!!out) | (!difference);
+  result = (!!result) | (!difference);
 
-  return out; 
+  return result; 
 }
 /*
  * ilog2 - return floor(log base 2 of x), where x > 0
