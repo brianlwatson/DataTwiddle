@@ -348,7 +348,23 @@ int ilog2(int x) {
  *   Rating: 2
  */
 unsigned float_neg(unsigned uf) {
- return 2;
+  
+  unsigned result=0;
+  unsigned mask = 0x007FFFFF;
+ 
+  printf("%x %x = %x\n",uf, mask, !(uf&mask));
+  //check if it's not null
+  if(!(uf & mask)) {
+    return uf;
+  }
+
+  else {
+    //invert the sign
+    result = uf ^ (1 << 31);
+  }
+
+
+ return result;
 }
 /* 
  * float_i2f - Return bit-level equivalent of expression (float) x
