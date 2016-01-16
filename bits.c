@@ -158,7 +158,6 @@ int bitAnd(int x, int y) {
  //and it with a high LSB
 int getByte(int x, int n) {
   int result = (x >> (n << 3)) & HIGH_LSB;
-
   return result;
 
 }
@@ -349,22 +348,22 @@ int ilog2(int x) {
  */
 unsigned float_neg(unsigned uf) {
   
-  unsigned result=0;
-  unsigned mask = 0x007FFFFF;
- 
-  printf("%x %x = %x\n",uf, mask, !(uf&mask));
-  //check if it's not null
-  if(!(uf & mask)) {
-    return uf;
+  //divide it up into the two parts. lower 23, upper 9 and sign (disregard)
+  unsigned exp = (uf >> 23) & 0xFF; 
+  unsigned frac = (uf << 9);  
+
+  //if exponent and the bit mask are the same, then exponents are all high
+  // AND fraction part is positive
+  if ((!(exp ^ 0xFF) && (frac))) 
+  {
+    return uf; 
   }
 
-  else {
-    //invert the sign
-    result = uf ^ (1 << 31);
+  else 
+  {
+    //invert the sign to negate
+    return uf ^ (0x1 << 31);
   }
-
-
- return result;
 }
 /* 
  * float_i2f - Return bit-level equivalent of expression (float) x
