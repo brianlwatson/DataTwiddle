@@ -187,7 +187,15 @@ int logicalShift(int x, int n) {
  *   Rating: 4
  */
 int bitCount(int x) {
-  return 2;
+	int bits_total; // store the total here
+	bits_total = (x & 0x55555555) + ((x >> 1) & 0x55555555); 	   //01010101010101010101010101010101
+	bits_total = (bits_total & 0x33333333) + ((bits_total >> 2) & 0x33333333); //00110011001100110011001100110011
+	bits_total = (bits_total & 0x0F0F0F0F) + ((bits_total >> 4) & 0x0F0F0F0F); //00001111000011110000111100001111
+	bits_total = (bits_total & 0x00FF00FF) + ((bits_total >> 8) & 0x00FF00FF); //00000000111111110000000011111111
+	bits_total = (bits_total & 0x0000FFFF) + ((bits_total >> 16)& 0x0000FFFF); //00000000000000001111111111111111
+
+
+  return bits_total;
 }
 /* 
  * bang - Compute !x without using !
@@ -222,7 +230,12 @@ int tmin(void) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-  return 2;
+	int bits, temp;
+	bits = 33 + ~n; //find number of bits to shift, the 33 is because we know one of the bits is a 2's complement
+	temp = x << bits; //get rid of 2's complement
+	temp = temp >> bits; //get value without 2's complement
+
+  return !(temp ^ x); //Bits should line up, if they don't return 0
 }
 /* 
  * divpwr2 - Compute x/(2^n), for 0 <= n <= 30
@@ -375,7 +388,7 @@ unsigned float_neg(unsigned uf) {
  *   Rating: 4
  */
 unsigned float_i2f(int x) {
-  return 2;
+return 2;
 }
 /* 
  * float_twice - Return bit-level equivalent of expression 2*f for
